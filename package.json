@@ -10,7 +10,7 @@
   "devDependencies": {},
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "cucumber-js"
+    "test": "cucumber-js src/test/"
   },
   "repository": {
     "type": "git",
