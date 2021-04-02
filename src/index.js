@@ -1,13 +1,30 @@
-// const formidable = require("formidable");
-// const StringDecoder = require("string_decoder").StringDecoder;
 const fs = require("fs");
+const path = require("path");
+const connectDB = require("../config/db");
 
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" });
+// const upload = multer({ dest: "uploads/" });
+
+const storage = multer.diskStorage({
+  destination: (req, file, callback) => {
+    callback(null, "uploads");
+  },
+  filename: (req, file, callback) => {
+    callback(null, file.filename + "-" + Date.now());
+  },
+});
+
+const upload = multer({ storage: storage });
+
+const Image = require("./model/Image");
+
 const express = require("express");
 const app = express();
 
 app.use(express.json({ extended: false }));
+
+// Connection with database:
+connectDB();
 
 const data = [
   {
@@ -44,6 +61,53 @@ app.post("/upload", upload.single("file"), (req, res) => {
       route: "/upload",
       message: "Upload Works",
     });
+  });
+  src.on("error", () => {
+    res.status(500).json({
+      method: "POST",
+      statusCode: 500,
+      route: "/upload",
+      message: "Upload failed",
+    });
+  });
+});
+
+app.post("/uploadDB", upload.single("file"), async (req, res) => {
+  const tmpPath = req.file.path;
+  const targetPath = "uploads/" + req.file.originalname;
+  const src = fs.createReadStream(tmpPath);
+  const dst = fs.createWriteStream(targetPath);
+
+  src.pipe(dst);
+  src.on("end", () => {
+    try {
+      const imgObj = {
+        name: req.file.originalname,
+        description: "upload test",
+        image: {
+          contentType: "image/jpeg",
+          data: fs.readFileSync(path.join("uploads/" + req.file.originalname)),
+        },
+      };
+
+      const image = new Image(imgObj);
+      image.save();
+
+      res.status(200).json({
+        method: "POST",
+        statusCode: 200,
+        route: "/upload",
+        message: "Upload Works",
+      });
+    } catch (error) {
+      console.error(error.message);
+      res.status(500).json({
+        method: "POST",
+        statusCode: 500,
+        route: "/uploadDB",
+        message: error.message,
+      });
+    }
   });
   src.on("error", () => {
     res.status(500).json({
