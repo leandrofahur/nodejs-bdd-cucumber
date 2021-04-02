@@ -19,6 +19,7 @@ const upload = multer({ storage: storage });
 const Image = require("./model/Image");
 
 const express = require("express");
+const { decode } = require("querystring");
 const app = express();
 
 app.use(express.json({ extended: false }));
@@ -96,7 +97,7 @@ app.post("/uploadDB", upload.single("file"), async (req, res) => {
       res.status(200).json({
         method: "POST",
         statusCode: 200,
-        route: "/upload",
+        route: "/uploadDB",
         message: "Upload Works",
       });
     } catch (error) {
@@ -113,10 +114,38 @@ app.post("/uploadDB", upload.single("file"), async (req, res) => {
     res.status(500).json({
       method: "POST",
       statusCode: 500,
-      route: "/upload",
+      route: "/uploadDB",
       message: "Upload failed",
     });
   });
+});
+
+app.get("/downloadDB", async (req, res) => {
+  const { name } = req.body;
+
+  try {
+    const image = await Image.findOne({ name });
+
+    console.log(image.image.data.buffer);
+
+    // @todo: implement the buffer with string decode.
+
+    fs.writeFileSync(name, image.image.data.buffer);
+
+    res.status(200).json({
+      method: "GET",
+      statusCode: 200,
+      route: "/downloadDB",
+      message: image,
+    });
+  } catch (error) {
+    res.status(500).json({
+      method: "GET",
+      statusCode: 500,
+      route: "/downloadDB",
+      message: error.message,
+    });
+  }
 });
 
 const PORT = process.env.PORT || 7000;
