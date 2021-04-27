@@ -2,19 +2,21 @@ const fs = require("fs");
 const path = require("path");
 const connectDB = require("../config/db");
 
-const multer = require("multer");
+const upload = require("./middleware/upload");
+
+// const multer = require("multer");
 // const upload = multer({ dest: "uploads/" });
 
-const storage = multer.diskStorage({
-  destination: (req, file, callback) => {
-    callback(null, "uploads");
-  },
-  filename: (req, file, callback) => {
-    callback(null, file.filename + "-" + Date.now());
-  },
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, callback) => {
+//     callback(null, "uploads");
+//   },
+//   filename: (req, file, callback) => {
+//     callback(null, file.filename + "-" + Date.now());
+//   },
+// });
 
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
 
 const Image = require("./model/Image");
 
@@ -79,6 +81,8 @@ app.post("/uploadDB", upload.single("file"), async (req, res) => {
   const src = fs.createReadStream(tmpPath);
   const dst = fs.createWriteStream(targetPath);
 
+  // console.log(req.params);
+
   src.pipe(dst);
   src.on("end", () => {
     try {
@@ -98,7 +102,8 @@ app.post("/uploadDB", upload.single("file"), async (req, res) => {
         method: "POST",
         statusCode: 200,
         route: "/uploadDB",
-        message: "Upload Works",
+        // message: "Upload Works",
+        message: image,
       });
     } catch (error) {
       console.error(error.message);
